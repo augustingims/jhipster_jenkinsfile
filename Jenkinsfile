@@ -14,10 +14,6 @@ node {
             }
     }
 
-    stage('nohttp') {
-        sh "./mvnw -ntp checkstyle:check"
-    }
-
     stage('install tools') {
         sh "./mvnw -ntp com.github.eirslett:frontend-maven-plugin:install-node-and-npm -DnodeVersion=v12.14.0 -DnpmVersion=6.13.7"
     }
