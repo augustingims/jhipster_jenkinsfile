@@ -9,7 +9,8 @@ node {
     }
     stage('Tests and build'){
             dir('first_app') {
-                bat "mvn clean install"
+                sh "chmod +x mvnw"
+                sh "./mvnw -ntp clean"
             }
     }
 
