@@ -1,0 +1,89 @@
+image: jhipster/jhipster:v6.7.0
+
+cache:
+  key: '$CI_COMMIT_REF_NAME'
+  paths:
+    - .maven/
+stages:
+  - check
+  - build
+  - test
+  - analyze
+  - package
+  - release
+  - deploy
+
+before_script:
+  - export NG_CLI_ANALYTICS="false"
+  - export MAVEN_USER_HOME=`pwd`/.maven
+  - ./mvnw -ntp com.github.eirslett:frontend-maven-plugin:install-node-and-npm -DnodeVersion=v12.14.0 -DnpmVersion=6.13.7 -Dmaven.repo.local=$MAVEN_USER_HOME
+  - ./mvnw -ntp com.github.eirslett:frontend-maven-plugin:npm -Dmaven.repo.local=$MAVEN_USER_HOME
+
+nohttp:
+  stage: check
+  script:
+    - ./mvnw -ntp checkstyle:check -Dmaven.repo.local=$MAVEN_USER_HOME
+
+maven-compile:
+  stage: build
+  script:
+    - ./mvnw -ntp compile -Dmaven.repo.local=$MAVEN_USER_HOME
+  artifacts:
+    paths:
+      - target/classes/
+      - target/generated-sources/
+    expire_in: 1 day
+
+maven-test:
+  stage: test
+  script:
+    - ./mvnw -ntp verify -Dmaven.repo.local=$MAVEN_USER_HOME
+  artifacts:
+    reports:
+      junit: target/test-results/**/TEST-*.xml
+    paths:
+      - target/test-results
+      - target/jacoco
+    expire_in: 1 day
+
+frontend-test:
+  stage: test
+  script:
+    - ./mvnw -ntp com.github.eirslett:frontend-maven-plugin:npm -Dfrontend.npm.arguments='run test' -Dmaven.repo.local=$MAVEN_USER_HOME
+  artifacts:
+    reports:
+      junit: target/test-results/TESTS-results-jest.xml
+    paths:
+      - target/test-results
+      - target/jacoco
+    expire_in: 1 day
+sonar-analyze:
+  stage: analyze
+  dependencies:
+    - maven-test
+    - frontend-test
+  script:
+    - ./mvnw -ntp compile -Dmaven.repo.local=$MAVEN_USER_HOME
+    - ./mvnw -ntp org.jacoco:jacoco-maven-plugin:prepare-agent initialize sonar:sonar -Dsonar.organization=devops -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=$SONAR_TOKEN -Dmaven.repo.local=$MAVEN_USER_HOME
+  allow_failure: true
+
+maven-package:
+  stage: package
+  script:
+    - ./mvnw -ntp verify deploy -Pprod -DskipTests -Dmaven.repo.local=$MAVEN_USER_HOME
+  artifacts:
+    paths:
+      - target/*.jar
+      - target/classes
+    expire_in: 1 day
+# Uncomment the following line to use gitlabs container registry. You need to adapt the REGISTRY_URL in case you are not using gitlab.com
+#docker-push:
+#    stage: release
+#    variables:
+#        REGISTRY_URL: registry.gitlab.com
+#        IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG-$CI_COMMIT_SHA
+#    dependencies:
+#        - maven-package
+#    script:
+#        - ./mvnw -ntp compile jib:build -Pprod -Djib.to.image=$IMAGE_TAG -Djib.to.auth.username=gitlab-ci-token  -Djib.to.auth.password=$CI_BUILD_TOKEN -Dmaven.repo.local=$MAVEN_USER_HOME
+
