@@ -62,7 +62,7 @@ node {
     stage('publish docker') {
         dir('first_app') {
 
-            sh "./mvnw -ntp jib:build"
+            sh "./mvnw -ntp jib:dockerBuild"
         }
     }
 
