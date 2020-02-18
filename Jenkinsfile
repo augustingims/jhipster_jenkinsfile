@@ -66,4 +66,11 @@ node {
         }
     }
 
+    stage('Deploy To Registry'){
+
+        docker.withRegistry('http://localhost:5000/firstapp') {
+            //sh 'docker push localhost:5000/firstapp:latest'
+        }
+    }
+
 }
