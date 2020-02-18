@@ -602,6 +602,7 @@
                         </from>
                         <to>
                             <image>localhost:5000/firstapp</image>
+                            <credHelper>osxkeychain</credHelper>
                         </to>
                         <container>
                             <entrypoint>
