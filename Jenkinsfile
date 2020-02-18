@@ -62,13 +62,14 @@ node {
     stage('publish docker') {
         dir('first_app') {
 
-            sh "./mvnw -ntp jib:dockerBuild"
+            sh "./mvnw -ntp com.google.cloud.tools:jib-maven-plugin:2.0.0:dockerBuild"
         }
     }
 
     stage('Deploy To Registry'){
 
         docker.withRegistry('http://localhost:5000/firstapp') {
+            //sh 'docker tag firstapp:latest localhost:5000/firstapp:latest'
             //sh 'docker push localhost:5000/firstapp:latest'
         }
     }
