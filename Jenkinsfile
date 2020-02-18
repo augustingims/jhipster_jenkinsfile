@@ -62,7 +62,7 @@ node {
     stage('publish docker') {
         dir('first_app') {
 
-            sh "./mvnw -ntp com.google.cloud.tools:jib-maven-plugin:2.0.0:dockerBuild"
+            sh "./mvnw -ntp jib:build"
         }
     }
 
